@@ -1,91 +1,119 @@
-import math
+import numpy as np
+import matplotlib.pyplot as plt
 
-class PCA:
-    def __init__(self, n_components):
-        self.n_components = n_components
-        self.components = None
-        self.mean = None
+def mean(data):
+    """
+    Calculate the mean of a list of numbers.
+    """
+    return sum(data) / len(data)
 
-    def mean_center(self, X):
-        mean_vector = [sum(x) / len(x) for x in zip(*X)]
-        self.mean = mean_vector
-        return [[x[i] - mean_vector[i] for i in range(len(x))] for x in X]
+def center_data(data):
+    """
+    Center the data by subtracting the mean from each feature.
+    """
+    num_samples, num_features = len(data), len(data[0])
+    mean_data = [mean([data[i][j] for i in range(num_samples)]) for j in range(num_features)]
+    
+    centered_data = [[data[i][j] - mean_data[j] for j in range(num_features)] for i in range(num_samples)]
+    
+    return centered_data, mean_data
 
-    def cov_matrix(self, X):
-        X_transposed = [list(x) for x in zip(*X)]
-        cov_matrix = [[0] * len(X_transposed) for _ in range(len(X_transposed))]
-        for i in range(len(X_transposed)):
-            for j in range(len(X_transposed)):
-                cov_matrix[i][j] = sum([(X_transposed[i][k] - self.mean[i]) * (X_transposed[j][k] - self.mean[j]) for k in range(len(X_transposed[0]))]) / (len(X_transposed[0]) - 1)
-        return cov_matrix
+def dot_product(vector1, vector2):
+    """
+    Calculate the dot product of two vectors.
+    """
+    return sum([vector1[i] * vector2[i] for i in range(len(vector1))])
 
-    def eigen_decomposition(self, cov_matrix):
-        eigenvalues, eigenvectors = [], []
-        for i in range(len(cov_matrix)):
-            b = cov_matrix[i][i]
-            a = [[cov_matrix[i][j] if i == j else 0 for j in range(len(cov_matrix))] for i in range(len(cov_matrix))]
-            for j in range(i + 1, len(cov_matrix)):
-                c = cov_matrix[j][i]
-                d = cov_matrix[i][j]
-                a[i][i] = b
-                a[j][j] = d
-                a[i][j] = a[j][i] = c
-            A = a
-            lambda_matrix = [[0] * len(cov_matrix) for _ in range(len(cov_matrix))]
-            for i in range(len(cov_matrix)):
-                lambda_matrix[i][i] = 1
-            for _ in range(100):
-                Q, R = self.QR_decomposition(A)
-                A = self.multiply_matrices(R, Q)
-                lambda_matrix = self.multiply_matrices(lambda_matrix, Q)
-            eigenvalues.append([A[i][i] for i in range(len(A))])
-            eigenvectors.append([lambda_matrix[i][j] for j in range(len(lambda_matrix[0])) for i in range(len(lambda_matrix)) if j % len(lambda_matrix) == i])
-        return eigenvalues[0], eigenvectors[0]
+def multiply_matrix_vector(matrix, vector):
+    """
+    Multiply a matrix by a vector.
+    """
+    return [dot_product(matrix[i], vector) for i in range(len(matrix))]
 
-    def QR_decomposition(self, matrix):
-        Q = [[0] * len(matrix) for _ in range(len(matrix))]
-        R = [[0] * len(matrix) for _ in range(len(matrix))]
-        for j in range(len(matrix)):
-            v = [matrix[i][j] if i >= j else 0 for i in range(len(matrix))]
-            mag_v = math.sqrt(sum([x ** 2 for x in v]))
-            Q[j] = [v[i] / mag_v if i >= j else 0 for i in range(len(matrix))]
-            for i in range(j + 1):
-                R[i][j] = sum([matrix[k][j] * Q[i][k] for k in range(len(matrix))])
-        return Q, R
+def transpose_matrix(matrix):
+    """
+    Transpose a matrix.
+    """
+    return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0]))]
 
-    def multiply_matrices(self, mat1, mat2):
-        result = [[0] * len(mat2[0]) for _ in range(len(mat1))]
-        for i in range(len(mat1)):
-            for j in range(len(mat2[0])):
-                for k in range(len(mat2)):
-                    result[i][j] += mat1[i][k] * mat2[k][j]
-        return result
+def calculate_covariance_matrix(data):
+    """
+    Calculate the covariance matrix of the centered data.
+    """
+    num_samples = len(data)
+    num_features = len(data[0])
+    
+    covariance_matrix = [[0] * num_features for _ in range(num_features)]
+    
+    for i in range(num_features):
+        for j in range(i, num_features):
+            covariance_matrix[i][j] = dot_product(data[i], data[j]) / (num_samples - 1)
+            covariance_matrix[j][i] = covariance_matrix[i][j]
+    
+    return covariance_matrix
 
-    def fit(self, X):
-        # mean centering
-        X_mean_centered = self.mean_center(X)
+def eigenvector_of_largest_eigenvalue(matrix):
+    """
+    Calculate the eigenvector corresponding to the largest eigenvalue
+    using the power iteration method.
+    """
+    num_features = len(matrix)
+    
+    # Initialize a random vector
+    vector = [1] * num_features
+    
+    for _ in range(100):  # Perform 100 iterations (adjust as needed)
+        new_vector = multiply_matrix_vector(matrix, vector)
+        magnitude = sum([x**2 for x in new_vector])**0.5
+        vector = [x / magnitude for x in new_vector]
+    
+    return vector
 
-        # covariance matrix
-        cov_matrix = self.cov_matrix(X_mean_centered)
+def pca(data, num_components):
+    """
+    Perform PCA on the data data.
+    
+    Parameters:
+        data: Input data matrix, shape (m, n) where m is the number of samples
+           and n is the number of features.
+        num_components: Number of principal components to keep.
+    
+    Returns:
+        new_data: Data transformed into the new reduced-dimensional space.
+        components: The principal components.
+    """
+    centered_data, mean_data = center_data(data)
+    
+    # Calculate the covariance matrix
+    covariance_matrix = calculate_covariance_matrix(centered_data)
+    
+    # Calculate the top 'num_components' eigenvectors
+    components = [eigenvector_of_largest_eigenvalue(covariance_matrix) for _ in range(num_components)]
+    
+    # Project the data onto the new reduced-dimensional space
+    new_data = [multiply_matrix_vector(transpose_matrix(components), sample) for sample in centered_data]
+    
+    return new_data, components
 
-        # eigen decomposition
-        eigenvalues, eigenvectors = self.eigen_decomposition(cov_matrix)
+# Generate some random data for demonstration
+np.random.seed(0)
+data = np.random.rand(100, 2) * 10  # 100 samples, 2 features
 
-        # sort eigenvalues and eigenvectors
-        idx = sorted(range(len(eigenvalues)), key=lambda i: eigenvalues[i], reverse=True)
-        eigenvectors = [[eigenvectors[j][i] for j in range(len(eigenvectors))] for i in idx]
+# Perform PCA with 1 component
+num_components = 1
+transformed_data, components = pca(data.tolist(), num_components)
 
-        # select top k eigen vectors
-        self.components = [eigenvectors[i] for i in range(self.n_components)]
+# Plot the original data and the principal component
+plt.figure(figsize=(8, 4))
+plt.scatter([sample[0] for sample in data], [sample[1] for sample in data], label='Original Data')
+plt.plot([0, components[0][0] * 10], [0, components[0][1] * 10], color='red', label='Principal Component')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
+plt.title('PCA Example')
+plt.legend()
+plt.axis('equal')
+plt.grid(True)
+plt.show()
 
-    def transform(self, X):
-        X_mean_centered = self.mean_center(X)
-        return self.multiply_matrices(X_mean_centered, self.components)
-
-# Example usage
-X = [[1, 2], [3, 4], [5, 6]]
-pca = PCA(n_components=1)
-pca.fit(X)
-X_pca = pca.transform(X)
-print("original data\n", X)
-print("Transformed data\n", X_pca)
+print("Principal Component(s):\n", components)
+print("\nTransformed Data (First 5 rows):\n", transformed_data[:5])
