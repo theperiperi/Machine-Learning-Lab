@@ -1,29 +1,51 @@
-import numpy as np 
-def custom_kmeans(X,n_clusters,max_iters=100):
+import math
+import random 
 
-    #randomly initialize centroids
-    centroids=X[np.random.choice(X.shape[0],size=n_clusters,replace=False)]
+def euclidean_distance(p1,p2):
+    return math.sqrt(sum([(a-b)**2 for a,b in zip(p1,p2)]))
 
-    for _ in range(max_iters):
-        #assign each datapoint to nearest centroid
-        distances= np.sqrt(((X-centroids[:,np.newaxis])**2).sum(axis=2))
-        labels=np.argmin(distances,axis=0)
+def assign_clusters(data,centroids):
+    clusters=[[] for i in range(len(centroids))]
+    for coordinate in data:
+        distances=[euclidean_distance(coordinate,centroid) for centroid in centroids]
+        cluster_index=distances.index(min(distances))
+        clusters[cluster_index].append(coordinate)
+    return clusters
 
-        #update centroids to mean of assigned data
-        new_centroids=np.array([X[labels==i].mean(axis=0) for i in range(n_clusters)])
+def update_centroids(clusters):
+    centroids=[]
+    for cluster in clusters:
+        centroid=[sum(point)/len(cluster) for point in zip(*cluster)]
+        centroids.append(centroid)
+    return centroids
 
-        #check for convergence
-        if np.allclose(new_centroids,centroids):
+def custom_kmeans(data,n_clusters,max_iters=100):
+    centroids=random.sample(list(data),n_clusters)
+
+    for i in range(max_iters):
+        clusters=assign_clusters(data,centroids)
+        new_centroids=update_centroids(clusters)
+
+        #check if same
+        if new_centroids==centroids:
             break 
 
         centroids=new_centroids 
+    
+    #assign labels based on final centroids
+    labels=[]
+    for coordinate in data:
+        distances=[euclidean_distance(coordinate,centroid) for centroid in centroids]
+        label=distances.index(min(distances))
+        labels.append(label)
+        
     return labels,centroids
 
-# Example usage
-X = np.array([[1, 2], [5, 8], [1.5, 1.8], [8, 8], [1, 0.6], [9, 11]])
-n_clusters = 2
+#example usage
+data = [[1, 2], [5, 8], [1.5, 1.8], [8, 8], [1, 0.6], [9, 11]]
+n_clusters=2
 
-labels_custom,centroids_custom=custom_kmeans(X,n_clusters)
-print("Labels (K-means with custom implementation):", labels_custom)
-print("Centroids:")
-print(centroids_custom)
+labels_custom,centroids_custom=custom_kmeans(data,n_clusters)
+print("custom labels are",labels_custom)
+print("centroids are",centroids_custom)
+            
