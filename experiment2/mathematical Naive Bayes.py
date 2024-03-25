@@ -41,4 +41,3 @@ nb = NaiveBayes()
 nb.fit(X_train, y_train)
 predictions = nb.predict(X_test)
 print("Predictions:", predictions)
-    
