@@ -58,7 +58,7 @@ def generate_higher_dim_linearly_separable_data():
 def plot_data_with_decision_boundary(X, y, model, title):
     # Plot the dataset and decision boundary
     plt.figure(figsize=(8, 6))
-    plt.scatter(X[:, 0], X[:, 1], c=y, cmap='coolwarm', edgecolors='k', label='Data')
+    plt.scatter(X[:, 0], X[:, 1], c=y)
     
     # Plot decision boundary
     x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
@@ -67,9 +67,7 @@ def plot_data_with_decision_boundary(X, y, model, title):
     Z =    np.c_[xx1.ravel(), xx2.ravel()]
     Z = model.predict(np.c_[xx1.ravel(), xx2.ravel()])
     Z = Z.reshape(xx1.shape)
-    plt.contourf(xx1, xx2, Z, alpha=0.4, cmap='coolwarm', levels=2)
-    plt.xlim(xx1.min(), xx1.max())
-    plt.ylim(xx2.min(), xx2.max())
+    plt.contourf(xx1, xx2, Z, alpha=0.4)
     plt.title(title)
     plt.xlabel('Feature 1')
     plt.ylabel('Feature 2')
