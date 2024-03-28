@@ -1,3 +1,5 @@
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
 import numpy as np
 
 class Node:
@@ -100,26 +102,29 @@ class DecisionTree:
         else:
             return self._traverse_tree(x, node.right)
 
-# Create a sample dataset
-X = np.array([[2.0, 1.0],
-              [2.0, 2.0],
-              [4.0, 5.0],
-              [5.0, 8.0],
-              [6.0, 9.0],
-              [7.0, 5.0],
-              [8.0, 2.0],
-              [9.0, 1.0]])
+    def accuracy(self, X, y):
+        predictions = self.predict(X)
+        return np.mean(predictions == y)
 
-y = np.array([0, 0, 1, 1, 1, 1, 0, 0])
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Create and fit the decision tree
 tree = DecisionTree(max_depth=3)
-tree.fit(X, y)
+tree.fit(X_train, y_train)
+
+# Calculate and print accuracy on the test set
+accuracy = tree.accuracy(X_test, y_test)
+print("Accuracy on test data:", accuracy)
 
 # Predict
-new_samples = np.array([[3.0, 3.0], [7.0, 8.0]])
-predictions = tree.predict(new_samples)
+predictions = tree.predict(X_test)
 
-print("Predictions for new samples:")
-for i, sample in enumerate(new_samples):
-    print("Sample {}: Class {}".format(sample, predictions[i]))
+print("Predictions for test samples:")
+for i, sample in enumerate(X_test):
+    print("Sample {}: Predicted Class {}, Actual Class {}".format(sample, predictions[i], y_test[i]))
