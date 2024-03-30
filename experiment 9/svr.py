@@ -15,7 +15,7 @@ y = iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Initialize SVR: kernal= linear, rbf, sigmoid and poly. 
-svr_model = SVR(kernel='linear', C=1.0, epsilon=0.1)  # You can adjust parameters like kernel, C, epsilon, etc.
+svr_model = SVR(kernel='rbf', C=1.0, epsilon=0.1)  # You can adjust parameters like kernel, C, epsilon, etc.
 
 # Train the SVR model
 svr_model.fit(X_train, y_train)
@@ -25,4 +25,4 @@ y_pred = svr_model.predict(X_test)
 
 # Calculate Mean Squared Error (MSE) as a measure of performance
 mse = mean_squared_error(y_test, y_pred)
-print("Mean Squared Error:", mse)
+print("Mean Squared Error for rbf:", mse)

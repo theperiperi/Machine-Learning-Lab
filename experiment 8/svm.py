@@ -15,7 +15,7 @@ y = iris.target
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Initialize SVM classifier
-svm_model = SVC(kernel='linear', C=1, gamma='auto')  # You can adjust parameters like kernel, C, gamma, etc.
+svm_model = SVC(kernel='linear', C=1, gamma='autco')  # You can adjust parameters like kernel, C, gamma, etc.
 
 # Train the SVM model
 svm_model.fit(X_train, y_train)
