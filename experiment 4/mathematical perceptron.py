@@ -30,11 +30,6 @@ class Perceptron:
                 # Save predictions
                 self.predictions[idx] = y_predicted
 
-    def predict(self, X):
-        linear_output = np.dot(X, self.weights) + self.bias
-        y_predicted = self._activation(linear_output)
-        return y_predicted
-
     def _activation(self, x):
         return np.where(x >= 0, 1, 0)
 
@@ -115,6 +110,5 @@ print("Feature 2 Weight:", perceptron_higher_dim.weights[1])
 print("Feature 3 Weight:", perceptron_higher_dim.weights[2])
 
 # Optionally, we can predict and print the accuracy for higher-dimensional data
-y_pred_higher_dim = perceptron_higher_dim.predict(X_higher_dim)
 accuracy_higher_dim = perceptron_higher_dim.accuracy(y_higher_dim)
 print("Accuracy on Higher-dimensional Data:", accuracy_higher_dim)
